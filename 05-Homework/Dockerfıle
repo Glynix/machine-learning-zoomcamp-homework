@@ -1,0 +1,22 @@
+FROM agrigorev/zoomcamp-model:2025
+
+WORKDIR /code
+
+# Install uv
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && ln -s $HOME/.local/bin/uv /usr/local/bin/uv
+
+# Copy dependency metadata first for caching
+COPY pyproject.toml ./
+
+# Install dependencies into system Python
+RUN uv sync --system --no-dev || true
+
+# Copy FastAPI app
+COPY serve_v2.py ./
+
+EXPOSE 8000
+
+CMD ["uvicorn", "serve_v2:app", "--host", "0.0.0.0", "--port", "8000"]
